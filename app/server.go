@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+
 	// Uncomment this block to pass the first stage
 	"net"
 	"os"
@@ -17,11 +19,31 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
+
 	conn, err := l.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
-	conn.Write([]byte("+PONG\r\n"))
-	conn.Close()
+	r := bufio.NewReader(conn)
+
+	for {
+		nstr := readStringLine(r)
+		fmt.Println("NumberOfCommands: ", nstr)
+		cnstr := readStringLine(r)
+		fmt.Println("NumberOfChars: ", cnstr)
+		c := readStringLine(r)
+		fmt.Println("Command: ", c)
+
+		conn.Write([]byte("+PONG\r\n"))
+	}
+}
+
+func readStringLine(reader *bufio.Reader) string {
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading buffer: ", err.Error())
+		os.Exit(1)
+	}
+	return line
 }
