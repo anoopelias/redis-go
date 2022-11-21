@@ -58,3 +58,28 @@ func TestParseString(t *testing.T) {
 		t.Errorf("Incorrect value %v", d)
 	}
 }
+
+func TestParseArray(t *testing.T) {
+	ty, d, err := parse("*5")
+
+	if err != nil {
+		t.Errorf("Unexpected error")
+	}
+
+	if ty != respArray {
+		t.Errorf("Incorrect type")
+	}
+
+	if d != 5 {
+		t.Errorf("Incorrect value %v", d)
+	}
+}
+
+func TestParseArrayError(t *testing.T) {
+	_, _, err := parse("*1a")
+
+	if err == nil {
+		t.Errorf("Unexpected error")
+	}
+
+}
