@@ -17,6 +17,7 @@ const (
 	respError
 	respInt
 	respArrayLen
+	respBulkStringLen
 )
 
 func main() {
@@ -63,7 +64,7 @@ func readStringLine(reader *bufio.Reader) string {
 func parse(s string) (respType, interface{}, error) {
 	s = strings.Trim(s, " ")
 
-	if s[0] == ':' || s[0] == '*' {
+	if s[0] == ':' || s[0] == '*' || s[0] == '$' {
 		n, err := strconv.Atoi(s[1:])
 		if err != nil {
 			return invalid, nil, fmt.Errorf("cannot parse string to int")
@@ -71,8 +72,10 @@ func parse(s string) (respType, interface{}, error) {
 
 		if s[0] == ':' {
 			return respInt, n, nil
-		} else {
+		} else if s[0] == '*' {
 			return respArrayLen, n, nil
+		} else {
+			return respBulkStringLen, n, nil
 		}
 	}
 
