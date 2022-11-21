@@ -42,3 +42,19 @@ func TestParseIntTrim(t *testing.T) {
 		t.Errorf("Incorrect value %v", d)
 	}
 }
+
+func TestParseString(t *testing.T) {
+	ty, d, err := parse("+Hotel")
+
+	if err != nil {
+		t.Errorf("Unexpected error")
+	}
+
+	if ty != respString {
+		t.Errorf("Incorrect type")
+	}
+
+	if d != "Hotel" {
+		t.Errorf("Incorrect value %v", d)
+	}
+}

@@ -67,5 +67,8 @@ func parse(s string) (respType, interface{}, error) {
 		}
 		return respInt, n, nil
 	}
+	if s[0] == '+' {
+		return respString, s[1:], nil
+	}
 	return respError, nil, fmt.Errorf("unknown type")
 }
