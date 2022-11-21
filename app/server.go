@@ -12,7 +12,8 @@ import (
 type respType int
 
 const (
-	respString respType = iota
+	invalid respType = iota
+	respString
 	respError
 	respInt
 )
@@ -63,12 +64,12 @@ func parse(s string) (respType, interface{}, error) {
 	if s[0] == ':' {
 		n, err := strconv.Atoi(s[1:])
 		if err != nil {
-			return respError, nil, fmt.Errorf("cannot parse string to int")
+			return invalid, nil, fmt.Errorf("cannot parse string to int")
 		}
 		return respInt, n, nil
 	}
 	if s[0] == '+' {
 		return respString, s[1:], nil
 	}
-	return respError, nil, fmt.Errorf("unknown type")
+	return invalid, nil, fmt.Errorf("unknown type")
 }
