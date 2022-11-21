@@ -66,7 +66,7 @@ func TestParseArray(t *testing.T) {
 		t.Errorf("Unexpected error")
 	}
 
-	if ty != respArray {
+	if ty != respArrayLen {
 		t.Errorf("Incorrect type")
 	}
 
