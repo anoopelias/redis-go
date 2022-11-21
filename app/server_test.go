@@ -26,3 +26,19 @@ func TestParseIntError(t *testing.T) {
 	}
 
 }
+
+func TestParseIntTrim(t *testing.T) {
+	ty, d, err := parse(" :23 ")
+
+	if err != nil {
+		t.Errorf("Unexpected error")
+	}
+
+	if ty != respInt {
+		t.Errorf("Incorrect type")
+	}
+
+	if d != 23 {
+		t.Errorf("Incorrect value %v", d)
+	}
+}

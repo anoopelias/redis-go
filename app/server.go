@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type respType int
@@ -58,6 +59,7 @@ func readStringLine(reader *bufio.Reader) string {
 }
 
 func parse(s string) (respType, interface{}, error) {
+	s = strings.Trim(s, " ")
 	if s[0] == ':' {
 		n, err := strconv.Atoi(s[1:])
 		if err != nil {
