@@ -5,6 +5,15 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
+)
+
+type respType int
+
+const (
+	respString respType = iota
+	respError
+	respInt
 )
 
 func main() {
@@ -46,4 +55,15 @@ func readStringLine(reader *bufio.Reader) string {
 		os.Exit(1)
 	}
 	return line
+}
+
+func parse(s string) (respType, interface{}, error) {
+	if s[0] == ':' {
+		n, err := strconv.Atoi(s[1:])
+		if err != nil {
+			return respError, nil, fmt.Errorf("cannot parse string to int")
+		}
+		return respInt, n, nil
+	}
+	return respError, nil, fmt.Errorf("unknown type")
 }
