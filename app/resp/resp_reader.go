@@ -32,16 +32,14 @@ func (r *RespReader) ReadCommand() (err error) {
 	return nil
 }
 
-func (r *RespReader) readLine() (t respType, err error) {
-	line, err := r.reader.ReadString('\n')
+func (r *RespReader) readLine() (line string, err error) {
+	line, err = r.reader.ReadString('\n')
 	if err != nil {
 		return
 	}
 
 	// remove \r\n from the end
-	line = line[:len(line)-2]
-	t, _, err = parse(line)
-	return
+	return line[:len(line)-2], nil
 }
 
 type respType int

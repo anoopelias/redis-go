@@ -49,7 +49,7 @@ func TestReadCommandsArrayErrorSecondTime(t *testing.T) {
 	assert.NotEqual(t, err, nil)
 }
 
-func TestReadLineSuccess(t *testing.T) {
+func TestReadLine(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
@@ -57,13 +57,13 @@ func TestReadLineSuccess(t *testing.T) {
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
 		DoAndReturn(func(_ byte) (string, error) {
-			return "$4\r\n", nil
+			return "PING\r\n", nil
 		})
 
-	ty, err := rr.readLine()
+	line, err := rr.readLine()
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, ty, respBulkStringLen)
+	assert.Equal(t, line, "PING")
 }
 
 func TestReadLineReadError(t *testing.T) {
@@ -80,29 +80,6 @@ func TestReadLineReadError(t *testing.T) {
 	_, err := rr.readLine()
 
 	assert.NotEqual(t, err, nil)
-
-}
-
-func TestRespReaderReadLine_InvalidStart(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
-	rr := NewRespReader(mr)
-
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		DoAndReturn(func(_ byte) (string, error) {
-			return "$4\r\n", nil
-		})
-
-	ty, err := rr.readLine()
-
-	if err != nil {
-		t.Errorf("No error for invalid array length, %v", err)
-	}
-
-	if ty != respBulkStringLen {
-		t.Errorf("Incorrect type, %v", ty)
-	}
 }
 
 func TestParseInt(t *testing.T) {
