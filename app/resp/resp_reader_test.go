@@ -13,10 +13,9 @@ func TestReadCommandsArraySuccess(t *testing.T) {
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		Return("$4\r\n", nil).
-		Times(3)
+	mr.mockReadString("*1\r\n", nil)
+	mr.mockReadString("$4\r\n", nil)
+	mr.mockReadString("PING\r\n", nil)
 
 	err := rr.ReadCommand()
 	assert.Equal(t, err, nil)
@@ -27,9 +26,7 @@ func TestReadCommandsArrayErrorFirstTime(t *testing.T) {
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		Return("$4\r\n", fmt.Errorf(""))
+	mr.mockReadString("*1\r\n", fmt.Errorf(""))
 
 	err := rr.ReadCommand()
 	assert.NotEqual(t, err, nil)
@@ -40,10 +37,8 @@ func TestReadCommandsArrayErrorSecondTime(t *testing.T) {
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		Return("$4\r\n", nil).
-		Return("$4\r\n", fmt.Errorf(""))
+	mr.mockReadString("*1\r\n", nil)
+	mr.mockReadString("*1\r\n", fmt.Errorf(""))
 
 	err := rr.ReadCommand()
 	assert.NotEqual(t, err, nil)
@@ -54,11 +49,7 @@ func TestReadLine(t *testing.T) {
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		DoAndReturn(func(_ byte) (string, error) {
-			return "PING\r\n", nil
-		})
+	mr.mockReadString("PING\r\n", nil)
 
 	line, err := rr.readLine()
 
@@ -71,11 +62,7 @@ func TestReadLineReadError(t *testing.T) {
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		DoAndReturn(func(_ byte) (string, error) {
-			return "$4\r\n", fmt.Errorf("read error")
-		})
+	mr.mockReadString("PING\r\n", fmt.Errorf("read error"))
 
 	_, err := rr.readLine()
 
@@ -187,4 +174,10 @@ func TestParseBulkStringLenError(t *testing.T) {
 		t.Errorf("Unexpected error")
 	}
 
+}
+
+func (mr *MockStringReader) mockReadString(str string, err error) {
+	mr.EXPECT().
+		ReadString(gomock.Eq(byte('\n'))).
+		Return(str, err)
 }
