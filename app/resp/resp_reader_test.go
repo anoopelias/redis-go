@@ -15,7 +15,7 @@ func TestReadCommandsArraySuccess(t *testing.T) {
 
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
-		Return("$4", nil).
+		Return("$4\r\n", nil).
 		Times(3)
 
 	err := rr.ReadCommand()
@@ -29,7 +29,7 @@ func TestReadCommandsArrayErrorFirstTime(t *testing.T) {
 
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
-		Return("$4", fmt.Errorf(""))
+		Return("$4\r\n", fmt.Errorf(""))
 
 	err := rr.ReadCommand()
 	assert.NotEqual(t, err, nil)
@@ -42,8 +42,8 @@ func TestReadCommandsArrayErrorSecondTime(t *testing.T) {
 
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
-		Return("$4", nil).
-		Return("$4", fmt.Errorf(""))
+		Return("$4\r\n", nil).
+		Return("$4\r\n", fmt.Errorf(""))
 
 	err := rr.ReadCommand()
 	assert.NotEqual(t, err, nil)
@@ -57,7 +57,7 @@ func TestReadLineSuccess(t *testing.T) {
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
 		DoAndReturn(func(_ byte) (string, error) {
-			return "$4", nil
+			return "$4\r\n", nil
 		})
 
 	ty, err := rr.readLine()
@@ -74,7 +74,7 @@ func TestReadLineReadError(t *testing.T) {
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
 		DoAndReturn(func(_ byte) (string, error) {
-			return "$4", fmt.Errorf("read error")
+			return "$4\r\n", fmt.Errorf("read error")
 		})
 
 	_, err := rr.readLine()
@@ -91,7 +91,7 @@ func TestRespReaderReadLine_InvalidStart(t *testing.T) {
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
 		DoAndReturn(func(_ byte) (string, error) {
-			return "$4", nil
+			return "$4\r\n", nil
 		})
 
 	ty, err := rr.readLine()

@@ -29,6 +29,7 @@ func execute(conn net.Conn) {
 	rr := resp.NewRespReader(bufio.NewReader(conn))
 
 	for {
+		// TODO: Handle error
 		rr.ReadCommand()
 		conn.Write([]byte("+PONG\r\n"))
 	}

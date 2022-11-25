@@ -38,6 +38,8 @@ func (r *RespReader) readLine() (t respType, err error) {
 		return
 	}
 
+	// remove \r\n from the end
+	line = line[:len(line)-2]
 	t, _, err = parse(line)
 	return
 }
