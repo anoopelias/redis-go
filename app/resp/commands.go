@@ -23,19 +23,25 @@ func (c *PingCommand) ReadParams(len int) error {
 }
 
 type EchoCommand struct {
-	reader StringReader
+	reader RespReader
+	str    string
 }
 
-func NewEchoCommand(sr StringReader) EchoCommand {
+func NewEchoCommand(rr RespReader) EchoCommand {
 	return EchoCommand{
-		reader: sr,
+		reader: rr,
 	}
 }
 
-func (c *EchoCommand) ReadParams(len int) error {
+func (c *EchoCommand) ReadParams(len int) (err error) {
 	if len != 1 {
 		return fmt.Errorf("incorrect number of params")
 	}
+	str, err := c.reader.ReadBulkString()
+	if err != nil {
+		return
+	}
 
+	c.str = str
 	return nil
 }
