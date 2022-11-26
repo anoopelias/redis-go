@@ -39,7 +39,30 @@ func (r *RespReaderImpl) ReadCommand() (Command, error) {
 }
 
 func (r *RespReaderImpl) ReadBulkString() (string, error) {
-	return "", nil
+	line, err := r.readLine()
+	if err != nil {
+		return "", err
+	}
+
+	t, v, err := parse(line)
+	if err != nil {
+		return line, err
+	}
+
+	if t != respBulkStringLen {
+		return "", fmt.Errorf("expected bulk string size %d", t)
+	}
+
+	line, err = r.readLine()
+	if err != nil {
+		return "", err
+	}
+
+	if len(line) != v.(int) {
+		return "", fmt.Errorf("mismatched line length %d, %d", len(line), v.(int))
+	}
+
+	return line, nil
 }
 
 func (r *RespReaderImpl) readLine() (line string, err error) {
