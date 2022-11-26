@@ -10,17 +10,23 @@ type StringReader interface {
 	ReadString(delim byte) (string, error)
 }
 
-type RespReader struct {
+type RespReader interface {
+	readLine() (string, error)
+	ReadBulkString() (string, error)
+	ReadCommand() (Command, error)
+}
+
+type RespReaderImpl struct {
 	reader StringReader
 }
 
 func NewRespReader(reader StringReader) RespReader {
-	return RespReader{
+	return &RespReaderImpl{
 		reader: reader,
 	}
 }
 
-func (r *RespReader) ReadCommand() (Command, error) {
+func (r *RespReaderImpl) ReadCommand() (Command, error) {
 
 	for i := 0; i < 3; i++ {
 		_, err := r.readLine()
@@ -32,7 +38,11 @@ func (r *RespReader) ReadCommand() (Command, error) {
 	return &PingCommand{}, nil
 }
 
-func (r *RespReader) readLine() (line string, err error) {
+func (r *RespReaderImpl) ReadBulkString() (string, error) {
+	return "", nil
+}
+
+func (r *RespReaderImpl) readLine() (line string, err error) {
 	line, err = r.reader.ReadString('\n')
 	if err != nil {
 		return
