@@ -20,16 +20,16 @@ func NewRespReader(reader StringReader) RespReader {
 	}
 }
 
-func (r *RespReader) ReadCommand() (err error) {
+func (r *RespReader) ReadCommand() (Command, error) {
 
 	for i := 0; i < 3; i++ {
-		_, err = r.readLine()
+		_, err := r.readLine()
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
 
-	return nil
+	return &PingCommand{}, nil
 }
 
 func (r *RespReader) readLine() (line string, err error) {

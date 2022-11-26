@@ -8,7 +8,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReadCommandsArraySuccess(t *testing.T) {
+func TestReadCommandEcho(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+
+	mr.mockReadString("*2\r\n", nil)
+	mr.mockReadString("$4\r\n", nil)
+	mr.mockReadString("ECHO\r\n", nil)
+	// mr.mockReadString("$12\r\n", nil)
+	// mr.mockReadString("Hello World!\r\n", nil)
+
+	_, err := rr.ReadCommand()
+	assert.Equal(t, err, nil)
+
+	// pc := c.(*EchoCommand)
+	// assert.NotNil(t, pc)
+}
+
+func TestReadCommandPing(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
@@ -17,8 +35,11 @@ func TestReadCommandsArraySuccess(t *testing.T) {
 	mr.mockReadString("$4\r\n", nil)
 	mr.mockReadString("PING\r\n", nil)
 
-	err := rr.ReadCommand()
+	c, err := rr.ReadCommand()
 	assert.Equal(t, err, nil)
+
+	pc := c.(*PingCommand)
+	assert.NotNil(t, pc)
 }
 
 func TestReadCommandsArrayErrorFirstTime(t *testing.T) {
@@ -28,7 +49,7 @@ func TestReadCommandsArrayErrorFirstTime(t *testing.T) {
 
 	mr.mockReadString("*1\r\n", fmt.Errorf(""))
 
-	err := rr.ReadCommand()
+	_, err := rr.ReadCommand()
 	assert.NotEqual(t, err, nil)
 }
 
@@ -40,7 +61,7 @@ func TestReadCommandsArrayErrorSecondTime(t *testing.T) {
 	mr.mockReadString("*1\r\n", nil)
 	mr.mockReadString("*1\r\n", fmt.Errorf(""))
 
-	err := rr.ReadCommand()
+	_, err := rr.ReadCommand()
 	assert.NotEqual(t, err, nil)
 }
 
@@ -174,10 +195,4 @@ func TestParseBulkStringLenError(t *testing.T) {
 		t.Errorf("Unexpected error")
 	}
 
-}
-
-func (mr *MockStringReader) mockReadString(str string, err error) {
-	mr.EXPECT().
-		ReadString(gomock.Eq(byte('\n'))).
-		Return(str, err)
 }
