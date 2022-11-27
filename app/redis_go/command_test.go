@@ -9,10 +9,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCommandSetAndGet(t *testing.T) {
+	data := make(map[string]string)
+	sc := SetCommand{
+		key:   "hello",
+		value: "world",
+	}
+	sc.Execute(&data)
+	gc := GetCommand{
+		key: "hello",
+	}
+	assert.Equal(t, "+world", gc.Execute(&data))
+}
+
 func TestCommandGet(t *testing.T) {
 	data := make(map[string]string)
-	sc := GetCommand{}
-	assert.Equal(t, sc.Execute(&data), "$-1")
+	gc := GetCommand{}
+	assert.Equal(t, gc.Execute(&data), "$-1")
 }
 
 func TestGetReadParams(t *testing.T) {

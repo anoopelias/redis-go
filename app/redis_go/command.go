@@ -128,7 +128,8 @@ func (s *SetCommand) ReadParams(len int) (err error) {
 	return nil
 }
 
-func (c *SetCommand) Execute(data *map[string]string) string {
+func (s *SetCommand) Execute(data *map[string]string) string {
+	(*data)[s.key] = s.value
 	return "+OK"
 }
 
@@ -156,6 +157,9 @@ func NewGetCommand(rr RespReader) *GetCommand {
 	}
 }
 
-func (c *GetCommand) Execute(data *map[string]string) string {
+func (g *GetCommand) Execute(data *map[string]string) string {
+	if val, ok := (*data)[g.key]; ok {
+		return "+" + val
+	}
 	return "$-1"
 }
