@@ -35,9 +35,9 @@ func (cr *CommandReader) Read() (Command, error) {
 
 	var c Command
 	switch cs {
-	case "PING":
+	case "PING", "ping":
 		c = NewPingCommand()
-	case "ECHO":
+	case "ECHO", "echo":
 		c = NewEchoCommand(cr.respReader)
 	default:
 		return nil, fmt.Errorf("unknown command %s", cs)

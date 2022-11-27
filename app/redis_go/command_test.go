@@ -39,6 +39,26 @@ func TestCommandReaderEcho(t *testing.T) {
 	assert.Equal(t, ec.str, "Hello World!")
 }
 
+func TestCommandReaderEchoLowerCase(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*2\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "echo\r\n", nil)
+	mockReadString(mr, "$12\r\n", nil)
+	mockReadString(mr, "Hello World!\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Equal(t, err, nil)
+
+	ec := c.(*EchoCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.str, "Hello World!")
+}
+
 func TestCommandReaderEchoArrayLenReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := mocks.NewMockStringReader(ctrl)
@@ -100,6 +120,23 @@ func TestCommandReaderPing(t *testing.T) {
 	mockReadString(mr, "*1\r\n", nil)
 	mockReadString(mr, "$4\r\n", nil)
 	mockReadString(mr, "PING\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Equal(t, err, nil)
+
+	pc := c.(*PingCommand)
+	assert.NotNil(t, pc)
+}
+
+func TestCommandReaderPingLowerCase(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*1\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "ping\r\n", nil)
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
