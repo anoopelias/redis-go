@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"net"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,6 +30,24 @@ func TestSetGet(t *testing.T) {
 	assert.Equal(t, "+OK\r\n", read(t, rw))
 	write(t, rw, "GET", "Lewis")
 	assert.Equal(t, "+Hamilton\r\n", read(t, rw))
+}
+
+func TestSetGetMulti(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		testSetGetKey(t, i)
+	}
+}
+
+func testSetGetKey(t *testing.T, n int) {
+	rw := connect(t)
+	ns := str(n)
+	write(t, rw, "SET", "Lewis"+ns, "Hamilton"+ns)
+	assert.Equal(t, "+OK\r\n", read(t, rw))
+
+	time.Sleep(time.Duration(rand.Intn(100)) * time.Microsecond)
+
+	write(t, rw, "GET", "Lewis"+ns)
+	assert.Equal(t, "+Hamilton"+ns+"\r\n", read(t, rw))
 }
 
 func read(t *testing.T, r *bufio.ReadWriter) string {
