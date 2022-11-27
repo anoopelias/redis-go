@@ -26,14 +26,14 @@ func (cr *CommandReader) Read() (Command, error) {
 		}
 	}
 
-	return &PingCommand{}, nil
+	return NewPingCommand(), nil
 }
 
 type PingCommand struct {
 }
 
-func NewPingCommand() PingCommand {
-	return PingCommand{}
+func NewPingCommand() *PingCommand {
+	return &PingCommand{}
 }
 
 func (c *PingCommand) ReadParams(len int) error {
