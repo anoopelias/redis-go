@@ -39,6 +39,10 @@ func (cr *CommandReader) Read() (Command, error) {
 		c = NewPingCommand()
 	case "ECHO", "echo":
 		c = NewEchoCommand(cr.respReader)
+	case "SET", "set":
+		c = NewSetCommand(cr.respReader)
+	case "GET", "get":
+		c = NewGetCommand(cr.respReader)
 	default:
 		return nil, fmt.Errorf("unknown command %s", cs)
 	}

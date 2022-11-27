@@ -113,6 +113,92 @@ func TestCommandPingExecute(t *testing.T) {
 	assert.Equal(t, pc.Execute(&data), "+PONG")
 }
 
+func TestCommandReaderGet(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*2\r\n", nil)
+	mockReadString(mr, "$3\r\n", nil)
+	mockReadString(mr, "GET\r\n", nil)
+	mockReadString(mr, "$5\r\n", nil)
+	mockReadString(mr, "Hello\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Nil(t, err)
+
+	ec := c.(*GetCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.key, "Hello")
+}
+
+func TestCommandReaderGetSmallCase(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*2\r\n", nil)
+	mockReadString(mr, "$3\r\n", nil)
+	mockReadString(mr, "get\r\n", nil)
+	mockReadString(mr, "$5\r\n", nil)
+	mockReadString(mr, "Hello\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Nil(t, err)
+
+	ec := c.(*GetCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.key, "Hello")
+}
+
+func TestCommandReaderSet(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*3\r\n", nil)
+	mockReadString(mr, "$3\r\n", nil)
+	mockReadString(mr, "SET\r\n", nil)
+	mockReadString(mr, "$5\r\n", nil)
+	mockReadString(mr, "Hello\r\n", nil)
+	mockReadString(mr, "$5\r\n", nil)
+	mockReadString(mr, "World\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Nil(t, err)
+
+	ec := c.(*SetCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.key, "Hello")
+	assert.Equal(t, ec.value, "World")
+}
+
+func TestCommandReaderSmallCase(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*3\r\n", nil)
+	mockReadString(mr, "$3\r\n", nil)
+	mockReadString(mr, "set\r\n", nil)
+	mockReadString(mr, "$5\r\n", nil)
+	mockReadString(mr, "Hello\r\n", nil)
+	mockReadString(mr, "$5\r\n", nil)
+	mockReadString(mr, "World\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Nil(t, err)
+
+	ec := c.(*SetCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.key, "Hello")
+	assert.Equal(t, ec.value, "World")
+}
+
 func TestCommandReaderEcho(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := mocks.NewMockStringReader(ctrl)
