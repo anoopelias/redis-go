@@ -35,6 +35,6 @@ func execute(conn net.Conn) {
 			fmt.Println("Error reading command: ", err.Error())
 			os.Exit(1)
 		}
-		conn.Write([]byte(c.Execute()))
+		conn.Write([]byte(c.Execute() + "\r\n"))
 	}
 }
