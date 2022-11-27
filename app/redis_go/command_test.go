@@ -9,6 +9,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCommandGet(t *testing.T) {
+	data := make(map[string]string)
+	sc := GetCommand{}
+	assert.Equal(t, sc.Execute(&data), "$-1")
+}
+
+func TestCommandSet(t *testing.T) {
+	data := make(map[string]string)
+	sc := SetCommand{}
+	assert.Equal(t, sc.Execute(&data), "+OK")
+}
+
 func TestCommandEchoExecute(t *testing.T) {
 	data := make(map[string]string)
 	ec := EchoCommand{str: "Hello World!"}

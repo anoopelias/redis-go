@@ -96,3 +96,34 @@ func (c *EchoCommand) ReadParams(len int) (err error) {
 func (c *EchoCommand) Execute(data *map[string]string) string {
 	return "+" + c.str
 }
+
+type SetCommand struct {
+	reader RespReader
+	// key    string
+	// value  string
+}
+
+func NewSetCommand(rr RespReader) *SetCommand {
+	return &SetCommand{
+		reader: rr,
+	}
+}
+
+func (c *SetCommand) Execute(data *map[string]string) string {
+	return "+OK"
+}
+
+type GetCommand struct {
+	reader RespReader
+	// key    string
+}
+
+func NewGetCommand(rr RespReader) *GetCommand {
+	return &GetCommand{
+		reader: rr,
+	}
+}
+
+func (c *GetCommand) Execute(data *map[string]string) string {
+	return "$-1"
+}
