@@ -19,14 +19,33 @@ func NewCommandReader(rr RespReader) CommandReader {
 }
 
 func (cr *CommandReader) Read() (Command, error) {
-	for i := 0; i < 3; i++ {
-		_, err := cr.respReader.ReadLine()
-		if err != nil {
-			return nil, err
-		}
+	l, err := cr.respReader.ReadArrayLen()
+	if err != nil {
+		return nil, err
+	}
+	if l <= 0 {
+		return nil, fmt.Errorf("array length should be at least 1")
 	}
 
-	return NewPingCommand(), nil
+	cs, err := cr.respReader.ReadBulkString()
+	if err != nil {
+		return nil, err
+	}
+
+	var c Command
+	switch cs {
+	case "PING":
+		c = NewPingCommand()
+	case "ECHO":
+		c = NewEchoCommand(cr.respReader)
+	}
+
+	err = c.ReadParams(l - 1)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 type PingCommand struct {
@@ -48,8 +67,8 @@ type EchoCommand struct {
 	str    string
 }
 
-func NewEchoCommand(rr RespReader) EchoCommand {
-	return EchoCommand{
+func NewEchoCommand(rr RespReader) *EchoCommand {
+	return &EchoCommand{
 		reader: rr,
 	}
 }
