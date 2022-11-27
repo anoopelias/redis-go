@@ -85,7 +85,7 @@ func TestReadLine(t *testing.T) {
 
 	mr.mockReadString("PING\r\n", nil)
 
-	line, err := rr.readLine()
+	line, err := rr.ReadLine()
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, line, "PING")
@@ -98,7 +98,7 @@ func TestReadLineReadError(t *testing.T) {
 
 	mr.mockReadString("PING\r\n", fmt.Errorf("read error"))
 
-	_, err := rr.readLine()
+	_, err := rr.ReadLine()
 
 	assert.NotEqual(t, err, nil)
 }

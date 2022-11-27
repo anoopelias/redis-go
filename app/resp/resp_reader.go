@@ -11,7 +11,7 @@ type StringReader interface {
 }
 
 type RespReader interface {
-	readLine() (string, error)
+	ReadLine() (string, error)
 	ReadBulkString() (string, error)
 }
 
@@ -26,7 +26,7 @@ func NewRespReader(reader StringReader) RespReader {
 }
 
 func (r *RespReaderImpl) ReadBulkString() (string, error) {
-	line, err := r.readLine()
+	line, err := r.ReadLine()
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +40,7 @@ func (r *RespReaderImpl) ReadBulkString() (string, error) {
 		return "", fmt.Errorf("expected bulk string size %d", t)
 	}
 
-	line, err = r.readLine()
+	line, err = r.ReadLine()
 	if err != nil {
 		return "", err
 	}
@@ -52,7 +52,7 @@ func (r *RespReaderImpl) ReadBulkString() (string, error) {
 	return line, nil
 }
 
-func (r *RespReaderImpl) readLine() (line string, err error) {
+func (r *RespReaderImpl) ReadLine() (line string, err error) {
 	line, err = r.reader.ReadString('\n')
 	if err != nil {
 		return

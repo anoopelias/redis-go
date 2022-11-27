@@ -20,7 +20,7 @@ func NewCommandReader(rr RespReader) CommandReader {
 
 func (cr *CommandReader) Read() (Command, error) {
 	for i := 0; i < 3; i++ {
-		_, err := cr.respReader.readLine()
+		_, err := cr.respReader.ReadLine()
 		if err != nil {
 			return nil, err
 		}

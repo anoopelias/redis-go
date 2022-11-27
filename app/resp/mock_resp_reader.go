@@ -86,32 +86,17 @@ func (mr *MockRespReaderMockRecorder) ReadBulkString() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadBulkString", reflect.TypeOf((*MockRespReader)(nil).ReadBulkString))
 }
 
-// ReadCommand mocks base method.
-func (m *MockRespReader) ReadCommand() (Command, error) {
+// ReadLine mocks base method.
+func (m *MockRespReader) ReadLine() (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadCommand")
-	ret0, _ := ret[0].(Command)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ReadCommand indicates an expected call of ReadCommand.
-func (mr *MockRespReaderMockRecorder) ReadCommand() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadCommand", reflect.TypeOf((*MockRespReader)(nil).ReadCommand))
-}
-
-// readLine mocks base method.
-func (m *MockRespReader) readLine() (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "readLine")
+	ret := m.ctrl.Call(m, "ReadLine")
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// readLine indicates an expected call of readLine.
-func (mr *MockRespReaderMockRecorder) readLine() *gomock.Call {
+// ReadLine indicates an expected call of ReadLine.
+func (mr *MockRespReaderMockRecorder) ReadLine() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "readLine", reflect.TypeOf((*MockRespReader)(nil).readLine))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadLine", reflect.TypeOf((*MockRespReader)(nil).ReadLine))
 }
