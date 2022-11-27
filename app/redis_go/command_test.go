@@ -21,6 +21,46 @@ func TestCommandSet(t *testing.T) {
 	assert.Equal(t, sc.Execute(&data), "+OK")
 }
 
+func TestSetReadParams(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	ec := NewSetCommand(mrr)
+	mrr.EXPECT().ReadBulkString().Return("mykey", nil)
+	mrr.EXPECT().ReadBulkString().Return("myvalue", nil)
+	assert.Nil(t, ec.ReadParams(2))
+	assert.Equal(t, ec.key, "mykey")
+	assert.Equal(t, ec.value, "myvalue")
+}
+
+func TestSetReadParamsLenError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	sc := NewSetCommand(mrr)
+	assert.NotNil(t, sc.ReadParams(0))
+	mrr.EXPECT().ReadBulkString().Times(0)
+}
+
+func TestSetReadParamsKeyReadError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	ec := NewSetCommand(mrr)
+	mrr.EXPECT().ReadBulkString().Return("Hello", fmt.Errorf("read error"))
+	assert.NotNil(t, ec.ReadParams(2))
+}
+
+func TestSetReadParamsValueReadError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	ec := NewSetCommand(mrr)
+	mrr.EXPECT().ReadBulkString().Return("Hello", nil)
+	mrr.EXPECT().ReadBulkString().Return("World", fmt.Errorf("read error"))
+	assert.NotNil(t, ec.ReadParams(2))
+}
+
 func TestCommandEchoExecute(t *testing.T) {
 	data := make(map[string]string)
 	ec := EchoCommand{str: "Hello World!"}

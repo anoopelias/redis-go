@@ -99,14 +99,33 @@ func (c *EchoCommand) Execute(data *map[string]string) string {
 
 type SetCommand struct {
 	reader RespReader
-	// key    string
-	// value  string
+	key    string
+	value  string
 }
 
 func NewSetCommand(rr RespReader) *SetCommand {
 	return &SetCommand{
 		reader: rr,
 	}
+}
+
+func (s *SetCommand) ReadParams(len int) (err error) {
+	if len != 2 {
+		return fmt.Errorf("incorrect number of params")
+	}
+	key, err := s.reader.ReadBulkString()
+	if err != nil {
+		return
+	}
+
+	value, err := s.reader.ReadBulkString()
+	if err != nil {
+		return
+	}
+
+	s.key = key
+	s.value = value
+	return nil
 }
 
 func (c *SetCommand) Execute(data *map[string]string) string {
