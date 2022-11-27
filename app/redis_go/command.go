@@ -6,7 +6,7 @@ import (
 
 type Command interface {
 	ReadParams(len int) error
-	Execute() string
+	Execute(data *map[string]string) string
 }
 
 type CommandReader struct {
@@ -65,7 +65,7 @@ func (c *PingCommand) ReadParams(len int) error {
 	return nil
 }
 
-func (c *PingCommand) Execute() string {
+func (c *PingCommand) Execute(data *map[string]string) string {
 	return "+PONG"
 }
 
@@ -93,6 +93,6 @@ func (c *EchoCommand) ReadParams(len int) (err error) {
 	return nil
 }
 
-func (c *EchoCommand) Execute() string {
+func (c *EchoCommand) Execute(data *map[string]string) string {
 	return "+" + c.str
 }

@@ -10,13 +10,15 @@ import (
 )
 
 func TestCommandEchoExecute(t *testing.T) {
+	data := make(map[string]string)
 	ec := EchoCommand{str: "Hello World!"}
-	assert.Equal(t, ec.Execute(), "+Hello World!")
+	assert.Equal(t, ec.Execute(&data), "+Hello World!")
 }
 
 func TestCommandPingExecute(t *testing.T) {
+	data := make(map[string]string)
 	pc := PingCommand{}
-	assert.Equal(t, pc.Execute(), "+PONG")
+	assert.Equal(t, pc.Execute(&data), "+PONG")
 }
 
 func TestCommandReaderEcho(t *testing.T) {

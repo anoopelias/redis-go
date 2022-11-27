@@ -14,6 +14,7 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
+	data := make(map[string]string)
 
 	for {
 		conn, err := l.Accept()
@@ -21,11 +22,11 @@ func main() {
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		go execute(conn)
+		go execute(conn, &data)
 	}
 }
 
-func execute(conn net.Conn) {
+func execute(conn net.Conn, data *map[string]string) {
 	rr := redis_go.NewRespReader(bufio.NewReader(conn))
 	cr := redis_go.NewCommandReader(rr)
 
@@ -36,6 +37,6 @@ func execute(conn net.Conn) {
 			conn.Close()
 			return
 		}
-		conn.Write([]byte(c.Execute() + "\r\n"))
+		conn.Write([]byte(c.Execute(data) + "\r\n"))
 	}
 }
