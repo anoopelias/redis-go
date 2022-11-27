@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"redis-go/app/mocks"
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
@@ -20,15 +21,15 @@ func TestCommandPingExecute(t *testing.T) {
 
 func TestCommandReaderEcho(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mr.mockReadString("*2\r\n", nil)
-	mr.mockReadString("$4\r\n", nil)
-	mr.mockReadString("ECHO\r\n", nil)
-	mr.mockReadString("$12\r\n", nil)
-	mr.mockReadString("Hello World!\r\n", nil)
+	mockReadString(mr, "*2\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "ECHO\r\n", nil)
+	mockReadString(mr, "$12\r\n", nil)
+	mockReadString(mr, "Hello World!\r\n", nil)
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
@@ -40,11 +41,11 @@ func TestCommandReaderEcho(t *testing.T) {
 
 func TestCommandReaderEchoArrayLenReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mr.mockReadString("*2\r\n", fmt.Errorf("read error"))
+	mockReadString(mr, "*2\r\n", fmt.Errorf("read error"))
 
 	_, err := cr.Read()
 	assert.NotNil(t, err)
@@ -52,11 +53,11 @@ func TestCommandReaderEchoArrayLenReadError(t *testing.T) {
 
 func TestCommandReaderEchoArrayLenZeroError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mr.mockReadString("*0\r\n", nil)
+	mockReadString(mr, "*0\r\n", nil)
 
 	_, err := cr.Read()
 	assert.NotNil(t, err)
@@ -64,13 +65,13 @@ func TestCommandReaderEchoArrayLenZeroError(t *testing.T) {
 
 func TestCommandReaderEchoBulkStringReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mr.mockReadString("*2\r\n", nil)
-	mr.mockReadString("$4\r\n", nil)
-	mr.mockReadString("ECHO\r\n", fmt.Errorf("read error"))
+	mockReadString(mr, "*2\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "ECHO\r\n", fmt.Errorf("read error"))
 
 	_, err := cr.Read()
 	assert.NotNil(t, err)
@@ -78,13 +79,13 @@ func TestCommandReaderEchoBulkStringReadError(t *testing.T) {
 
 func TestCommandReaderEchoReadParamsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mr.mockReadString("*1\r\n", nil)
-	mr.mockReadString("$4\r\n", nil)
-	mr.mockReadString("ECHO\r\n", nil)
+	mockReadString(mr, "*1\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "ECHO\r\n", nil)
 
 	_, err := cr.Read()
 	assert.NotNil(t, err)
@@ -92,13 +93,13 @@ func TestCommandReaderEchoReadParamsError(t *testing.T) {
 
 func TestCommandReaderPing(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mr.mockReadString("*1\r\n", nil)
-	mr.mockReadString("$4\r\n", nil)
-	mr.mockReadString("PING\r\n", nil)
+	mockReadString(mr, "*1\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "PING\r\n", nil)
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
@@ -119,7 +120,7 @@ func TestPingReadParamsError(t *testing.T) {
 
 func TestEchoReadParams(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mrr := NewMockRespReader(ctrl)
+	mrr := mocks.NewMockRespReader(ctrl)
 
 	ec := NewEchoCommand(mrr)
 	mrr.EXPECT().ReadBulkString().Return("Hello World!", nil)
@@ -129,7 +130,7 @@ func TestEchoReadParams(t *testing.T) {
 
 func TestEchoReadParamsReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mrr := NewMockRespReader(ctrl)
+	mrr := mocks.NewMockRespReader(ctrl)
 
 	ec := NewEchoCommand(mrr)
 	mrr.EXPECT().ReadBulkString().Return("Hello", fmt.Errorf("read error"))
@@ -138,7 +139,7 @@ func TestEchoReadParamsReadError(t *testing.T) {
 
 func TestEchoReadParamsLenError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mrr := NewMockRespReader(ctrl)
+	mrr := mocks.NewMockRespReader(ctrl)
 
 	pc := NewEchoCommand(mrr)
 	assert.NotNil(t, pc.ReadParams(0))

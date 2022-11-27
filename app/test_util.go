@@ -1,8 +1,12 @@
 package main
 
-import gomock "github.com/golang/mock/gomock"
+import (
+	"redis-go/app/mocks"
 
-func (mr *MockStringReader) mockReadString(str string, err error) {
+	gomock "github.com/golang/mock/gomock"
+)
+
+func mockReadString(mr *mocks.MockStringReader, str string, err error) {
 	mr.EXPECT().
 		ReadString(gomock.Eq(byte('\n'))).
 		Return(str, err)

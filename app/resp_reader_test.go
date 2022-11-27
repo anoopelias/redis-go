@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"redis-go/app/mocks"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -10,10 +11,10 @@ import (
 
 func TestReadArrayLen(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("*12\r\n", nil)
+	mockReadString(mr, "*12\r\n", nil)
 
 	n, err := rr.ReadArrayLen()
 	assert.Nil(t, err)
@@ -22,20 +23,20 @@ func TestReadArrayLen(t *testing.T) {
 
 func TestReadArrayLenReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("*12\r\n", fmt.Errorf("read error"))
+	mockReadString(mr, "*12\r\n", fmt.Errorf("read error"))
 
 	_, err := rr.ReadArrayLen()
 	assert.NotNil(t, err)
 }
 func TestReadArrayLenParseError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("*abc\r\n", nil)
+	mockReadString(mr, "*abc\r\n", nil)
 
 	_, err := rr.ReadArrayLen()
 	assert.NotNil(t, err)
@@ -43,10 +44,10 @@ func TestReadArrayLenParseError(t *testing.T) {
 
 func TestReadArrayLenTypeError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString(":31\r\n", nil)
+	mockReadString(mr, ":31\r\n", nil)
 
 	_, err := rr.ReadArrayLen()
 	assert.NotNil(t, err)
@@ -54,11 +55,11 @@ func TestReadArrayLenTypeError(t *testing.T) {
 
 func TestReadBulkString(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("$12\r\n", nil)
-	mr.mockReadString("Hello World!\r\n", nil)
+	mockReadString(mr, "$12\r\n", nil)
+	mockReadString(mr, "Hello World!\r\n", nil)
 
 	str, err := rr.ReadBulkString()
 	assert.Nil(t, err)
@@ -67,10 +68,10 @@ func TestReadBulkString(t *testing.T) {
 
 func TestReadBulkStringLenReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("$12\r\n", fmt.Errorf("read error"))
+	mockReadString(mr, "$12\r\n", fmt.Errorf("read error"))
 
 	_, err := rr.ReadBulkString()
 	assert.NotNil(t, err)
@@ -78,10 +79,10 @@ func TestReadBulkStringLenReadError(t *testing.T) {
 
 func TestReadBulkStringLenParseError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("$abc\r\n", nil)
+	mockReadString(mr, "$abc\r\n", nil)
 
 	_, err := rr.ReadBulkString()
 	assert.NotNil(t, err)
@@ -89,10 +90,10 @@ func TestReadBulkStringLenParseError(t *testing.T) {
 
 func TestReadBulkStringLenTypeError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("*12\r\n", nil)
+	mockReadString(mr, "*12\r\n", nil)
 
 	_, err := rr.ReadBulkString()
 	assert.NotNil(t, err)
@@ -100,11 +101,11 @@ func TestReadBulkStringLenTypeError(t *testing.T) {
 
 func TestReadBulkStringReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("$12\r\n", nil)
-	mr.mockReadString("Hello World!\r\n", fmt.Errorf("read error"))
+	mockReadString(mr, "$12\r\n", nil)
+	mockReadString(mr, "Hello World!\r\n", fmt.Errorf("read error"))
 
 	_, err := rr.ReadBulkString()
 	assert.NotNil(t, err)
@@ -112,11 +113,11 @@ func TestReadBulkStringReadError(t *testing.T) {
 
 func TestReadBulkStringLenMistmatchError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("$13\r\n", nil)
-	mr.mockReadString("Hello World!\r\n", nil)
+	mockReadString(mr, "$13\r\n", nil)
+	mockReadString(mr, "Hello World!\r\n", nil)
 
 	_, err := rr.ReadBulkString()
 	assert.NotNil(t, err)
@@ -124,10 +125,10 @@ func TestReadBulkStringLenMistmatchError(t *testing.T) {
 
 func TestReadLine(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("PING\r\n", nil)
+	mockReadString(mr, "PING\r\n", nil)
 
 	line, err := rr.ReadLine()
 
@@ -137,10 +138,10 @@ func TestReadLine(t *testing.T) {
 
 func TestReadLineReadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
+	mr := mocks.NewMockStringReader(ctrl)
 	rr := NewRespReader(mr)
 
-	mr.mockReadString("PING\r\n", fmt.Errorf("read error"))
+	mockReadString(mr, "PING\r\n", fmt.Errorf("read error"))
 
 	_, err := rr.ReadLine()
 
