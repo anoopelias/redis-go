@@ -1,4 +1,4 @@
-package main
+package redis_go
 
 import (
 	"redis-go/app/mocks"

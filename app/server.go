@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"redis-go/app/redis_go"
 )
 
 func main() {
@@ -25,12 +26,15 @@ func main() {
 }
 
 func execute(conn net.Conn) {
-	rr := NewRespReader(bufio.NewReader(conn))
-	cr := NewCommandReader(rr)
+	rr := redis_go.NewRespReader(bufio.NewReader(conn))
+	cr := redis_go.NewCommandReader(rr)
 
 	for {
-		// TODO: Handle error
-		cr.Read()
-		conn.Write([]byte("+PONG\r\n"))
+		c, err := cr.Read()
+		if err != nil {
+			fmt.Println("Error reading command: ", err.Error())
+			os.Exit(1)
+		}
+		conn.Write([]byte(c.Execute()))
 	}
 }
