@@ -27,12 +27,8 @@ func NewRespReader(reader StringReader) RespReader {
 }
 
 func (r *RespReaderImpl) ReadArrayLen() (int, error) {
-	line, err := r.ReadLine()
-	if err != nil {
-		return -1, err
-	}
 
-	t, v, err := parse(line)
+	t, v, err := r.readAndParseLine()
 	if err != nil {
 		return -1, err
 	}
@@ -45,12 +41,8 @@ func (r *RespReaderImpl) ReadArrayLen() (int, error) {
 }
 
 func (r *RespReaderImpl) ReadBulkString() (string, error) {
-	line, err := r.ReadLine()
-	if err != nil {
-		return "", err
-	}
 
-	t, v, err := parse(line)
+	t, v, err := r.readAndParseLine()
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +51,7 @@ func (r *RespReaderImpl) ReadBulkString() (string, error) {
 		return "", fmt.Errorf("expected bulk string size %d", t)
 	}
 
-	line, err = r.ReadLine()
+	line, err := r.ReadLine()
 	if err != nil {
 		return "", err
 	}
@@ -69,6 +61,20 @@ func (r *RespReaderImpl) ReadBulkString() (string, error) {
 	}
 
 	return line, nil
+}
+
+func (r *RespReaderImpl) readAndParseLine() (respType, interface{}, error) {
+	line, err := r.ReadLine()
+	if err != nil {
+		return 0, nil, err
+	}
+
+	t, v, err := parse(line)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return t, v, nil
 }
 
 func (r *RespReaderImpl) ReadLine() (line string, err error) {
