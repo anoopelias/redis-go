@@ -71,6 +71,21 @@ func (m *MockRespReader) EXPECT() *MockRespReaderMockRecorder {
 	return m.recorder
 }
 
+// ReadArrayLen mocks base method.
+func (m *MockRespReader) ReadArrayLen() (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadArrayLen")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadArrayLen indicates an expected call of ReadArrayLen.
+func (mr *MockRespReaderMockRecorder) ReadArrayLen() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadArrayLen", reflect.TypeOf((*MockRespReader)(nil).ReadArrayLen))
+}
+
 // ReadBulkString mocks base method.
 func (m *MockRespReader) ReadBulkString() (string, error) {
 	m.ctrl.T.Helper()

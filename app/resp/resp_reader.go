@@ -13,6 +13,7 @@ type StringReader interface {
 type RespReader interface {
 	ReadLine() (string, error)
 	ReadBulkString() (string, error)
+	ReadArrayLen() (int, error)
 }
 
 type RespReaderImpl struct {
@@ -25,6 +26,24 @@ func NewRespReader(reader StringReader) RespReader {
 	}
 }
 
+func (r *RespReaderImpl) ReadArrayLen() (int, error) {
+	line, err := r.ReadLine()
+	if err != nil {
+		return -1, err
+	}
+
+	t, v, err := parse(line)
+	if err != nil {
+		return -1, err
+	}
+
+	if t != respArrayLen {
+		return -1, fmt.Errorf("expected array len %d", t)
+	}
+
+	return v.(int), nil
+}
+
 func (r *RespReaderImpl) ReadBulkString() (string, error) {
 	line, err := r.ReadLine()
 	if err != nil {
@@ -33,7 +52,7 @@ func (r *RespReaderImpl) ReadBulkString() (string, error) {
 
 	t, v, err := parse(line)
 	if err != nil {
-		return line, err
+		return "", err
 	}
 
 	if t != respBulkStringLen {

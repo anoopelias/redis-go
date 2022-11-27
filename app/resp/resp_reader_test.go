@@ -8,6 +8,50 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestReadArrayLen(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+
+	mr.mockReadString("*12\r\n", nil)
+
+	n, err := rr.ReadArrayLen()
+	assert.Nil(t, err)
+	assert.Equal(t, n, 12)
+}
+
+func TestReadArrayLenReadError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+
+	mr.mockReadString("*12\r\n", fmt.Errorf("read error"))
+
+	_, err := rr.ReadArrayLen()
+	assert.NotNil(t, err)
+}
+func TestReadArrayLenParseError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+
+	mr.mockReadString("*abc\r\n", nil)
+
+	_, err := rr.ReadArrayLen()
+	assert.NotNil(t, err)
+}
+
+func TestReadArrayLenTypeError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+
+	mr.mockReadString(":31\r\n", nil)
+
+	_, err := rr.ReadArrayLen()
+	assert.NotNil(t, err)
+}
+
 func TestReadBulkString(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := NewMockStringReader(ctrl)
