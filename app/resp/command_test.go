@@ -8,6 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCommandEchoExecute(t *testing.T) {
+	ec := EchoCommand{str: "Hello World!"}
+	assert.Equal(t, ec.Execute(), "+Hello World!")
+}
+
+func TestCommandPingExecute(t *testing.T) {
+	pc := PingCommand{}
+	assert.Equal(t, pc.Execute(), "+PONG")
+}
+
 func TestCommandReaderEcho(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := NewMockStringReader(ctrl)
