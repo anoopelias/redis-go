@@ -8,6 +8,27 @@ type Command interface {
 	ReadParams(len int) error
 }
 
+type CommandReader struct {
+	respReader RespReader
+}
+
+func NewCommandReader(rr RespReader) CommandReader {
+	return CommandReader{
+		respReader: rr,
+	}
+}
+
+func (cr *CommandReader) Read() (Command, error) {
+	for i := 0; i < 3; i++ {
+		_, err := cr.respReader.readLine()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &PingCommand{}, nil
+}
+
 type PingCommand struct {
 }
 

@@ -13,7 +13,6 @@ type StringReader interface {
 type RespReader interface {
 	readLine() (string, error)
 	ReadBulkString() (string, error)
-	ReadCommand() (Command, error)
 }
 
 type RespReaderImpl struct {
@@ -24,18 +23,6 @@ func NewRespReader(reader StringReader) RespReader {
 	return &RespReaderImpl{
 		reader: reader,
 	}
-}
-
-func (r *RespReaderImpl) ReadCommand() (Command, error) {
-
-	for i := 0; i < 3; i++ {
-		_, err := r.readLine()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &PingCommand{}, nil
 }
 
 func (r *RespReaderImpl) ReadBulkString() (string, error) {

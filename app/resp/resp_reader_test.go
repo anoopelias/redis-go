@@ -8,63 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReadCommandEcho(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
-	rr := NewRespReader(mr)
-
-	mr.mockReadString("*2\r\n", nil)
-	mr.mockReadString("$4\r\n", nil)
-	mr.mockReadString("ECHO\r\n", nil)
-	// mr.mockReadString("$12\r\n", nil)
-	// mr.mockReadString("Hello World!\r\n", nil)
-
-	_, err := rr.ReadCommand()
-	assert.Equal(t, err, nil)
-
-	// pc := c.(*EchoCommand)
-	// assert.NotNil(t, pc)
-}
-
-func TestReadCommandPing(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
-	rr := NewRespReader(mr)
-
-	mr.mockReadString("*1\r\n", nil)
-	mr.mockReadString("$4\r\n", nil)
-	mr.mockReadString("PING\r\n", nil)
-
-	c, err := rr.ReadCommand()
-	assert.Equal(t, err, nil)
-
-	pc := c.(*PingCommand)
-	assert.NotNil(t, pc)
-}
-
-func TestReadCommandsArrayErrorFirstTime(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
-	rr := NewRespReader(mr)
-
-	mr.mockReadString("*1\r\n", fmt.Errorf(""))
-
-	_, err := rr.ReadCommand()
-	assert.NotEqual(t, err, nil)
-}
-
-func TestReadCommandsArrayErrorSecondTime(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mr := NewMockStringReader(ctrl)
-	rr := NewRespReader(mr)
-
-	mr.mockReadString("*1\r\n", nil)
-	mr.mockReadString("*1\r\n", fmt.Errorf(""))
-
-	_, err := rr.ReadCommand()
-	assert.NotEqual(t, err, nil)
-}
-
 func TestReadBulkString(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := NewMockStringReader(ctrl)

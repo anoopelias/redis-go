@@ -8,6 +8,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCommandReaderEcho(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mr.mockReadString("*2\r\n", nil)
+	mr.mockReadString("$4\r\n", nil)
+	mr.mockReadString("ECHO\r\n", nil)
+	// mr.mockReadString("$12\r\n", nil)
+	// mr.mockReadString("Hello World!\r\n", nil)
+
+	_, err := cr.Read()
+	assert.Equal(t, err, nil)
+
+	// pc := c.(*EchoCommand)
+	// assert.NotNil(t, pc)
+}
+
+func TestCommandReaderPing(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mr.mockReadString("*1\r\n", nil)
+	mr.mockReadString("$4\r\n", nil)
+	mr.mockReadString("PING\r\n", nil)
+
+	c, err := cr.Read()
+	assert.Equal(t, err, nil)
+
+	pc := c.(*PingCommand)
+	assert.NotNil(t, pc)
+}
+
 func TestPingReadParams(t *testing.T) {
 	pc := NewPingCommand()
 	assert.Nil(t, pc.ReadParams(0))
