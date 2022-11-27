@@ -33,7 +33,7 @@ func execute(conn net.Conn, data *map[string]string) {
 	for {
 		c, err := cr.Read()
 		if err != nil {
-			fmt.Printf("Error reading command: %v", err)
+			fmt.Printf("Error reading command: %v\n", err)
 			conn.Close()
 			return
 		}
