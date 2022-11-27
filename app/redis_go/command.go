@@ -39,6 +39,8 @@ func (cr *CommandReader) Read() (Command, error) {
 		c = NewPingCommand()
 	case "ECHO":
 		c = NewEchoCommand(cr.respReader)
+	default:
+		return nil, fmt.Errorf("unknown command %s", cs)
 	}
 
 	err = c.ReadParams(l - 1)

@@ -108,6 +108,20 @@ func TestCommandReaderPing(t *testing.T) {
 	assert.NotNil(t, pc)
 }
 
+func TestCommandReaderUnknownCommandError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadString(mr, "*1\r\n", nil)
+	mockReadString(mr, "$4\r\n", nil)
+	mockReadString(mr, "PICK\r\n", nil)
+
+	_, err := cr.Read()
+	assert.NotNil(t, err)
+}
+
 func TestPingReadParams(t *testing.T) {
 	pc := NewPingCommand()
 	assert.Nil(t, pc.ReadParams(0))
