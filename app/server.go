@@ -32,7 +32,7 @@ func execute(conn net.Conn) {
 	for {
 		c, err := cr.Read()
 		if err != nil {
-			fmt.Println("Error reading command: ", err.Error())
+			fmt.Printf("Error reading command: %v", err)
 			os.Exit(1)
 		}
 		conn.Write([]byte(c.Execute() + "\r\n"))
