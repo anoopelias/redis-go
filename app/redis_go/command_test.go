@@ -15,6 +15,33 @@ func TestCommandGet(t *testing.T) {
 	assert.Equal(t, sc.Execute(&data), "$-1")
 }
 
+func TestGetReadParams(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	ec := NewGetCommand(mrr)
+	mrr.EXPECT().ReadBulkString().Return("mykey", nil)
+	assert.Nil(t, ec.ReadParams(1))
+	assert.Equal(t, ec.key, "mykey")
+}
+
+func TestGetReadParamsLenError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	ec := NewGetCommand(mrr)
+	assert.NotNil(t, ec.ReadParams(2))
+}
+
+func TestGetReadParamsKeyReadError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mrr := mocks.NewMockRespReader(ctrl)
+
+	ec := NewGetCommand(mrr)
+	mrr.EXPECT().ReadBulkString().Return("", fmt.Errorf("read error"))
+	assert.NotNil(t, ec.ReadParams(1))
+}
+
 func TestCommandSet(t *testing.T) {
 	data := make(map[string]string)
 	sc := SetCommand{}

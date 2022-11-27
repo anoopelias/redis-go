@@ -134,7 +134,20 @@ func (c *SetCommand) Execute(data *map[string]string) string {
 
 type GetCommand struct {
 	reader RespReader
-	// key    string
+	key    string
+}
+
+func (g *GetCommand) ReadParams(len int) (err error) {
+	if len != 1 {
+		return fmt.Errorf("incorrect number of params")
+	}
+	key, err := g.reader.ReadBulkString()
+	if err != nil {
+		return
+	}
+
+	g.key = key
+	return nil
 }
 
 func NewGetCommand(rr RespReader) *GetCommand {
