@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"redis-go/app/resp"
 )
 
 func main() {
@@ -26,8 +25,8 @@ func main() {
 }
 
 func execute(conn net.Conn) {
-	rr := resp.NewRespReader(bufio.NewReader(conn))
-	cr := resp.NewCommandReader(rr)
+	rr := NewRespReader(bufio.NewReader(conn))
+	cr := NewCommandReader(rr)
 
 	for {
 		// TODO: Handle error

@@ -2,7 +2,7 @@
 // Source: app/resp/resp_reader.go
 
 // Package resp is a generated GoMock package.
-package resp
+package main
 
 import (
 	reflect "reflect"

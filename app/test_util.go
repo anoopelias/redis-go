@@ -1,4 +1,4 @@
-package resp
+package main
 
 import gomock "github.com/golang/mock/gomock"
 
