@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -33,21 +34,25 @@ func TestSetGet(t *testing.T) {
 }
 
 func TestSetGetMulti(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		testSetGetKey(t, i)
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go testSetGetKey(t, &wg, i)
 	}
+	wg.Wait()
 }
 
-func testSetGetKey(t *testing.T, n int) {
+func testSetGetKey(t *testing.T, wg *sync.WaitGroup, n int) {
 	rw := connect(t)
 	ns := str(n)
-	write(t, rw, "SET", "Lewis"+ns, "Hamilton"+ns)
+	write(t, rw, "SET", "Lewis "+ns, "Hamilton"+ns)
 	assert.Equal(t, "+OK\r\n", read(t, rw))
 
 	time.Sleep(time.Duration(rand.Intn(100)) * time.Microsecond)
 
-	write(t, rw, "GET", "Lewis"+ns)
+	write(t, rw, "GET", "Lewis "+ns)
 	assert.Equal(t, "+Hamilton"+ns+"\r\n", read(t, rw))
+	wg.Done()
 }
 
 func read(t *testing.T, r *bufio.ReadWriter) string {
