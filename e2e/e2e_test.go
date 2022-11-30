@@ -35,7 +35,7 @@ func TestSetGet(t *testing.T) {
 
 func TestSetGetMulti(t *testing.T) {
 	var wg sync.WaitGroup
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 500; i++ {
 		wg.Add(1)
 		go testSetGetKey(t, &wg, i)
 	}
@@ -48,7 +48,7 @@ func testSetGetKey(t *testing.T, wg *sync.WaitGroup, n int) {
 	write(t, rw, "SET", "Lewis "+ns, "Hamilton"+ns)
 	assert.Equal(t, "+OK\r\n", read(t, rw))
 
-	time.Sleep(time.Duration(rand.Intn(100)) * time.Microsecond)
+	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 
 	write(t, rw, "GET", "Lewis "+ns)
 	assert.Equal(t, "+Hamilton"+ns+"\r\n", read(t, rw))
