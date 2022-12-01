@@ -119,11 +119,7 @@ func TestCommandReaderGet(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*2\r\n", nil)
-	mockReadString(mr, "$3\r\n", nil)
-	mockReadString(mr, "GET\r\n", nil)
-	mockReadString(mr, "$5\r\n", nil)
-	mockReadString(mr, "Hello\r\n", nil)
+	mockReadCommand(mr, nil, 2, "GET", "Hello")
 
 	c, err := cr.Read()
 	assert.Nil(t, err)
@@ -139,11 +135,7 @@ func TestCommandReaderGetSmallCase(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*2\r\n", nil)
-	mockReadString(mr, "$3\r\n", nil)
-	mockReadString(mr, "get\r\n", nil)
-	mockReadString(mr, "$5\r\n", nil)
-	mockReadString(mr, "Hello\r\n", nil)
+	mockReadCommand(mr, nil, 2, "get", "Hello")
 
 	c, err := cr.Read()
 	assert.Nil(t, err)
@@ -159,13 +151,7 @@ func TestCommandReaderSet(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*3\r\n", nil)
-	mockReadString(mr, "$3\r\n", nil)
-	mockReadString(mr, "SET\r\n", nil)
-	mockReadString(mr, "$5\r\n", nil)
-	mockReadString(mr, "Hello\r\n", nil)
-	mockReadString(mr, "$5\r\n", nil)
-	mockReadString(mr, "World\r\n", nil)
+	mockReadCommand(mr, nil, 3, "SET", "Hello", "World")
 
 	c, err := cr.Read()
 	assert.Nil(t, err)
@@ -174,6 +160,7 @@ func TestCommandReaderSet(t *testing.T) {
 	assert.NotNil(t, ec)
 	assert.Equal(t, ec.key, "Hello")
 	assert.Equal(t, ec.value, "World")
+	assert.Equal(t, ec.px, -1)
 }
 
 func TestCommandReaderSmallCase(t *testing.T) {
@@ -182,13 +169,7 @@ func TestCommandReaderSmallCase(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*3\r\n", nil)
-	mockReadString(mr, "$3\r\n", nil)
-	mockReadString(mr, "set\r\n", nil)
-	mockReadString(mr, "$5\r\n", nil)
-	mockReadString(mr, "Hello\r\n", nil)
-	mockReadString(mr, "$5\r\n", nil)
-	mockReadString(mr, "World\r\n", nil)
+	mockReadCommand(mr, nil, 3, "set", "Hello", "World")
 
 	c, err := cr.Read()
 	assert.Nil(t, err)
@@ -205,11 +186,7 @@ func TestCommandReaderEcho(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*2\r\n", nil)
-	mockReadString(mr, "$4\r\n", nil)
-	mockReadString(mr, "ECHO\r\n", nil)
-	mockReadString(mr, "$12\r\n", nil)
-	mockReadString(mr, "Hello World!\r\n", nil)
+	mockReadCommand(mr, nil, 2, "ECHO", "Hello World!")
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
@@ -225,11 +202,7 @@ func TestCommandReaderEchoLowerCase(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*2\r\n", nil)
-	mockReadString(mr, "$4\r\n", nil)
-	mockReadString(mr, "echo\r\n", nil)
-	mockReadString(mr, "$12\r\n", nil)
-	mockReadString(mr, "Hello World!\r\n", nil)
+	mockReadCommand(mr, nil, 2, "echo", "Hello World!")
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
@@ -269,9 +242,7 @@ func TestCommandReaderEchoBulkStringReadError(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*2\r\n", nil)
-	mockReadString(mr, "$4\r\n", nil)
-	mockReadString(mr, "ECHO\r\n", fmt.Errorf("read error"))
+	mockReadCommand(mr, fmt.Errorf("read error"), 2, "ECHO")
 
 	_, err := cr.Read()
 	assert.NotNil(t, err)
@@ -283,9 +254,7 @@ func TestCommandReaderEchoReadParamsError(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*1\r\n", nil)
-	mockReadString(mr, "$4\r\n", nil)
-	mockReadString(mr, "ECHO\r\n", nil)
+	mockReadCommand(mr, nil, 1, "ECHO")
 
 	_, err := cr.Read()
 	assert.NotNil(t, err)
@@ -297,9 +266,7 @@ func TestCommandReaderPing(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*1\r\n", nil)
-	mockReadString(mr, "$4\r\n", nil)
-	mockReadString(mr, "PING\r\n", nil)
+	mockReadCommand(mr, nil, 1, "PING")
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
@@ -314,9 +281,7 @@ func TestCommandReaderPingLowerCase(t *testing.T) {
 	rr := NewRespReader(mr)
 	cr := NewCommandReader(rr)
 
-	mockReadString(mr, "*1\r\n", nil)
-	mockReadString(mr, "$4\r\n", nil)
-	mockReadString(mr, "ping\r\n", nil)
+	mockReadCommand(mr, nil, 1, "ping")
 
 	c, err := cr.Read()
 	assert.Equal(t, err, nil)
@@ -325,6 +290,93 @@ func TestCommandReaderPingLowerCase(t *testing.T) {
 	assert.NotNil(t, pc)
 }
 
+func TestCommandReaderSetWithPx(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadCommand(mr, nil, 5, "set", "Lewis", "Hamilton", "PX", "100")
+
+	c, err := cr.Read()
+	assert.Equal(t, nil, err)
+
+	ec := c.(*SetCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.key, "Lewis")
+	assert.Equal(t, ec.value, "Hamilton")
+	assert.Equal(t, ec.px, 100)
+}
+
+func TestCommandReaderSetWithPxSmallCase(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadCommand(mr, nil, 5, "set", "Lewis", "Hamilton", "px", "100")
+
+	c, err := cr.Read()
+	assert.Equal(t, nil, err)
+
+	ec := c.(*SetCommand)
+	assert.NotNil(t, ec)
+	assert.Equal(t, ec.key, "Lewis")
+	assert.Equal(t, ec.value, "Hamilton")
+	assert.Equal(t, ec.px, 100)
+}
+
+func TestCommandReaderSetWithUnknownParam(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadCommand(mr, fmt.Errorf("read error"), 5,
+		"set", "Lewis", "Hamilton", "gx")
+
+	_, err := cr.Read()
+	assert.NotNil(t, err)
+}
+
+func TestCommandReaderSetReadPxError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadCommand(mr, fmt.Errorf("read error"), 5,
+		"set", "Lewis", "Hamilton", "px")
+
+	_, err := cr.Read()
+	assert.NotNil(t, err)
+}
+
+func TestCommandReaderSetPxReadTimeError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadCommand(mr, fmt.Errorf("read error"), 5,
+		"set", "Lewis", "Hamilton", "px", "100")
+
+	_, err := cr.Read()
+	assert.NotNil(t, err)
+}
+
+func TestCommandReaderSetPxReadTimeStringError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mr := mocks.NewMockStringReader(ctrl)
+	rr := NewRespReader(mr)
+	cr := NewCommandReader(rr)
+
+	mockReadCommand(mr, nil, 5,
+		"set", "Lewis", "Hamilton", "px", "abcd")
+
+	_, err := cr.Read()
+	assert.NotNil(t, err)
+}
 func TestCommandReaderUnknownCommandError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mr := mocks.NewMockStringReader(ctrl)

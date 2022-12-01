@@ -2,6 +2,7 @@ package redis_go
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type Command interface {
@@ -105,18 +106,21 @@ type SetCommand struct {
 	reader RespReader
 	key    string
 	value  string
+	px     int
 }
 
 func NewSetCommand(rr RespReader) *SetCommand {
 	return &SetCommand{
 		reader: rr,
+		px:     -1,
 	}
 }
 
 func (s *SetCommand) ReadParams(len int) (err error) {
-	if len != 2 {
+	if len != 2 && len != 4 {
 		return fmt.Errorf("incorrect number of params")
 	}
+
 	key, err := s.reader.ReadBulkString()
 	if err != nil {
 		return
@@ -129,6 +133,32 @@ func (s *SetCommand) ReadParams(len int) (err error) {
 
 	s.key = key
 	s.value = value
+
+	if len == 2 {
+		return
+	}
+
+	px, err := s.reader.ReadBulkString()
+	if err != nil {
+		return
+	}
+
+	if px != "PX" && px != "px" {
+		return fmt.Errorf("expected px as the third arg")
+	}
+
+	ts, err := s.reader.ReadBulkString()
+	if err != nil {
+		return
+	}
+
+	t, err := strconv.Atoi(ts)
+	if err != nil {
+		return
+	}
+
+	s.px = t
+
 	return nil
 }
 
