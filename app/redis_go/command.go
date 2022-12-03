@@ -3,6 +3,7 @@ package redis_go
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 type Command interface {
@@ -164,6 +165,13 @@ func (s *SetCommand) ReadParams(len int) (err error) {
 
 func (s *SetCommand) Execute(data *map[string]string) string {
 	(*data)[s.key] = s.value
+	if s.px != -1 {
+		pxTimer := time.NewTimer(time.Duration(s.px) * time.Millisecond)
+		go func() {
+			<-pxTimer.C
+			delete(*data, s.key)
+		}()
+	}
 	return "+OK"
 }
 

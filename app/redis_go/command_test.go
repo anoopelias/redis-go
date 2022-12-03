@@ -4,10 +4,43 @@ import (
 	"fmt"
 	"redis-go/app/mocks"
 	"testing"
+	"time"
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestCommandSetAndGetWithoutPx(t *testing.T) {
+	data := make(map[string]string)
+	sc := SetCommand{
+		key:   "hello",
+		value: "world",
+		px:    -1,
+	}
+	sc.Execute(&data)
+	gc := GetCommand{
+		key: "hello",
+	}
+	assert.Equal(t, "+world", gc.Execute(&data))
+	time.Sleep(600 * time.Millisecond)
+	assert.Equal(t, "+world", gc.Execute(&data))
+}
+
+func TestCommandSetAndGetWithPx(t *testing.T) {
+	data := make(map[string]string)
+	sc := SetCommand{
+		key:   "hello",
+		value: "world",
+		px:    500,
+	}
+	sc.Execute(&data)
+	gc := GetCommand{
+		key: "hello",
+	}
+	assert.Equal(t, "+world", gc.Execute(&data))
+	time.Sleep(600 * time.Millisecond)
+	assert.Equal(t, "$-1", gc.Execute(&data))
+}
 
 func TestCommandSetAndGet(t *testing.T) {
 	data := make(map[string]string)
