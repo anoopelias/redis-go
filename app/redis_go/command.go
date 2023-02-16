@@ -9,6 +9,7 @@ import (
 type Command interface {
 	ReadParams(len int) error
 	Execute(data *map[string]string) string
+	Response() chan string
 }
 
 type CommandReader struct {
@@ -57,11 +58,28 @@ func (cr *CommandReader) Read() (Command, error) {
 	return c, nil
 }
 
+type BaseCommand struct {
+	resp chan string
+}
+
+func (c *BaseCommand) Response() chan string {
+	return c.resp
+}
+
+func NewBaseCommand() BaseCommand {
+	return BaseCommand{
+		resp: make(chan string),
+	}
+}
+
 type PingCommand struct {
+	BaseCommand
 }
 
 func NewPingCommand() *PingCommand {
-	return &PingCommand{}
+	return &PingCommand{
+		BaseCommand: NewBaseCommand(),
+	}
 }
 
 func (c *PingCommand) ReadParams(len int) error {
@@ -76,13 +94,15 @@ func (c *PingCommand) Execute(data *map[string]string) string {
 }
 
 type EchoCommand struct {
+	BaseCommand
 	reader RespReader
 	str    string
 }
 
 func NewEchoCommand(rr RespReader) *EchoCommand {
 	return &EchoCommand{
-		reader: rr,
+		BaseCommand: NewBaseCommand(),
+		reader:      rr,
 	}
 }
 
@@ -104,6 +124,7 @@ func (c *EchoCommand) Execute(data *map[string]string) string {
 }
 
 type SetCommand struct {
+	BaseCommand
 	reader RespReader
 	key    string
 	value  string
@@ -112,8 +133,9 @@ type SetCommand struct {
 
 func NewSetCommand(rr RespReader) *SetCommand {
 	return &SetCommand{
-		reader: rr,
-		px:     -1,
+		BaseCommand: NewBaseCommand(),
+		reader:      rr,
+		px:          -1,
 	}
 }
 
@@ -176,6 +198,7 @@ func (s *SetCommand) Execute(data *map[string]string) string {
 }
 
 type GetCommand struct {
+	BaseCommand
 	reader RespReader
 	key    string
 }
@@ -195,7 +218,8 @@ func (g *GetCommand) ReadParams(len int) (err error) {
 
 func NewGetCommand(rr RespReader) *GetCommand {
 	return &GetCommand{
-		reader: rr,
+		BaseCommand: NewBaseCommand(),
+		reader:      rr,
 	}
 }
 
