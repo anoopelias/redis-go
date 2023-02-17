@@ -35,3 +35,11 @@ func (*Syscalls) Write(fd int, p []byte) (int, error) {
 func (*Syscalls) Close(fd int) error {
 	return syscall.Close(fd)
 }
+
+func (*Syscalls) Kqueue() (int, error) {
+	return syscall.Kqueue()
+}
+
+func (*Syscalls) Kevent(kq int, changes, events []syscall.Kevent_t, timeout *syscall.Timespec) (n int, err error) {
+	return syscall.Kevent(kq, changes, events, timeout)
+}

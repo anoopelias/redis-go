@@ -14,11 +14,13 @@ type SysCall interface {
 	Read(int, []byte) (int, error)
 	Write(int, []byte) (int, error)
 	Close(int) error
+	Kqueue() (int, error)
+	Kevent(int, []syscall.Kevent_t, []syscall.Kevent_t, *syscall.Timespec) (n int, err error)
 }
 
 type SysCallError interface {
 	Error() string
-	Timeout() bool
+	Temporary() bool
 }
 
 type EventLoop interface {
@@ -29,36 +31,52 @@ type SocketEventLoop struct {
 	handler func(StringReader) string
 	cfds    []int
 	sys     SysCall
+	kq      int
+	sfd     int
 }
 
 func NewSocketEventLoop(sys SysCall) SocketEventLoop {
 	return SocketEventLoop{
-		cfds: make([]int, 0),
-		sys:  sys,
+		sys: sys,
 	}
 }
 
 func (el *SocketEventLoop) Run(handler func(StringReader) string) error {
 	el.handler = handler
-	sfd, err := el.create()
+	err := el.create()
 	if err != nil {
 		return err
 	}
 	fmt.Println("Server started")
 
 	for {
-		err = el.execute(sfd)
+		err = el.execute()
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func (el *SocketEventLoop) create() (int, error) {
+func (el *SocketEventLoop) addKqEvent(fd int) error {
+	ev := syscall.Kevent_t{
+		Ident:  uint64(fd),
+		Filter: syscall.EVFILT_READ,
+		Flags:  syscall.EV_ADD,
+	}
+	_, err := el.sys.Kevent(el.kq, []syscall.Kevent_t{ev}, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (el *SocketEventLoop) create() error {
 	sfd, err := el.sys.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
 	if err != nil {
-		return -1, err
+		return err
 	}
+	el.sfd = sfd
 
 	// TODO: Port needs to be configurable
 	sa := syscall.SockaddrInet4{
@@ -68,53 +86,68 @@ func (el *SocketEventLoop) create() (int, error) {
 
 	err = el.sys.Bind(sfd, &sa)
 	if err != nil {
-		return -1, err
+		return err
 	}
 
 	// Setting backlog to something acceptable to redis-benchmark command
 	// Needs more thoughts on what should be the ideal value here.
 	err = el.sys.Listen(sfd, 50)
 	if err != nil {
-		return -1, err
+		return err
 	}
 
 	err = el.sys.SetNonblock(sfd, true)
 	if err != nil {
-		return -1, err
+		return err
 	}
-	return sfd, nil
-}
 
-func (el *SocketEventLoop) execute(sfd int) error {
-	err := el.accept(sfd)
+	kq, err := el.sys.Kqueue()
+	if err != nil {
+		return err
+	}
+	el.kq = kq
+
+	err = el.addKqEvent(sfd)
 	if err != nil {
 		return err
 	}
 
-	cfds := []int{}
-	for _, cfd := range el.cfds {
-		ctd, err := el.process(cfd)
-		if err != nil {
-			return err
-		}
-
-		if ctd {
-			cfds = append(cfds, cfd)
-		} else {
-			err = el.sys.Close(cfd)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-	el.cfds = cfds
-
 	return nil
 }
 
-func (el *SocketEventLoop) accept(sfd int) error {
-	cfd, _, err := el.sys.Accept(sfd)
+func (el *SocketEventLoop) execute() error {
+	events := make([]syscall.Kevent_t, 10)
+	n, err := el.sys.Kevent(el.kq, nil, events, nil)
+
+	if err != nil && !shouldRetry(err) {
+		return err
+	}
+
+	for i := 0; i < n; i++ {
+		fid := int(events[i].Ident)
+
+		if fid == el.sfd {
+			err = el.accept()
+			if err != nil {
+				return err
+			}
+		} else {
+			ctd, _ := el.process(fid)
+
+			if !ctd {
+				err = el.sys.Close(fid)
+				if err != nil {
+					return err
+				}
+			}
+
+		}
+	}
+	return nil
+}
+
+func (el *SocketEventLoop) accept() error {
+	cfd, _, err := el.sys.Accept(el.sfd)
 	isNew := true
 	if err != nil {
 		isNew = false
@@ -128,7 +161,10 @@ func (el *SocketEventLoop) accept(sfd int) error {
 		if err != nil {
 			return err
 		}
-		el.cfds = append(el.cfds, cfd)
+		err := el.addKqEvent(cfd)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -179,5 +215,5 @@ func shouldRetry(err error) bool {
 	if !ok {
 		return false
 	}
-	return sce.Timeout()
+	return sce.Temporary()
 }
