@@ -78,6 +78,36 @@ func (mr *MockSysCallMockRecorder) Close(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockSysCall)(nil).Close), arg0)
 }
 
+// Kevent mocks base method.
+func (m *MockSysCall) Kevent(arg0 int, arg1, arg2 []syscall.Kevent_t, arg3 *syscall.Timespec) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Kevent", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Kevent indicates an expected call of Kevent.
+func (mr *MockSysCallMockRecorder) Kevent(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kevent", reflect.TypeOf((*MockSysCall)(nil).Kevent), arg0, arg1, arg2, arg3)
+}
+
+// Kqueue mocks base method.
+func (m *MockSysCall) Kqueue() (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Kqueue")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Kqueue indicates an expected call of Kqueue.
+func (mr *MockSysCallMockRecorder) Kqueue() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kqueue", reflect.TypeOf((*MockSysCall)(nil).Kqueue))
+}
+
 // Listen mocks base method.
 func (m *MockSysCall) Listen(arg0, arg1 int) error {
 	m.ctrl.T.Helper()
@@ -188,18 +218,18 @@ func (mr *MockSysCallErrorMockRecorder) Error() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockSysCallError)(nil).Error))
 }
 
-// Timeout mocks base method.
-func (m *MockSysCallError) Timeout() bool {
+// Temporary mocks base method.
+func (m *MockSysCallError) Temporary() bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Timeout")
+	ret := m.ctrl.Call(m, "Temporary")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// Timeout indicates an expected call of Timeout.
-func (mr *MockSysCallErrorMockRecorder) Timeout() *gomock.Call {
+// Temporary indicates an expected call of Temporary.
+func (mr *MockSysCallErrorMockRecorder) Temporary() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Timeout", reflect.TypeOf((*MockSysCallError)(nil).Timeout))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Temporary", reflect.TypeOf((*MockSysCallError)(nil).Temporary))
 }
 
 // MockStringReader is a mock of StringReader interface.
