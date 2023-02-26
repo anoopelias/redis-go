@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -34,25 +33,36 @@ func TestSetGet(t *testing.T) {
 }
 
 func TestSetGetMulti(t *testing.T) {
-	var wg sync.WaitGroup
-	for i := 0; i < 500; i++ {
-		wg.Add(1)
-		go testSetGetKey(t, &wg, i)
+	tchan := make(chan time.Duration)
+	n := 500
+	for i := 0; i < n; i++ {
+		go testSetGetKey(t, tchan, i)
 	}
-	wg.Wait()
+
+	tt := 0
+	for i := 0; i < n*2; i++ {
+		tt += int(<-tchan)
+	}
+	t.Logf("Avg time: %d\n", int(tt/(n*2*1000)))
 }
 
-func testSetGetKey(t *testing.T, wg *sync.WaitGroup, n int) {
+func testSetGetKey(t *testing.T, tchan chan time.Duration, n int) {
 	rw := connect(t)
 	ns := str(n)
+
+	st := time.Now()
 	write(t, rw, "SET", "Lewis "+ns, "Hamilton"+ns)
-	assert.Equal(t, "OK", read(t, rw))
+	res := read(t, rw)
+	tchan <- time.Since(st)
+
+	assert.Equal(t, "OK", res)
 
 	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 
+	st = time.Now()
 	write(t, rw, "GET", "Lewis "+ns)
 	assert.Equal(t, "Hamilton"+ns, read(t, rw))
-	wg.Done()
+	tchan <- time.Since(st)
 }
 
 func read(t *testing.T, r *bufio.ReadWriter) string {
