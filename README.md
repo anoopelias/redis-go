@@ -23,3 +23,11 @@ No `Makefile` yet.
 $ go test app/redis_go/*.go
 $ go test e2e/*.go
 ```
+
+## Generate Mocks
+
+From root directory:
+```
+mockgen -package=mocks redis-go/app/ev SysCall,SysCallError >app/mocks/mock_syscall.go
+mockgen -package=mocks redis-go/app/redis_go RespReader >app/mocks/mock_redis_go.go
+```
