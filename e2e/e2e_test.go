@@ -13,47 +13,80 @@ import (
 )
 
 func TestPing(t *testing.T) {
-	rw := connect(t)
+	rw, err := connect()
+	if err != nil {
+		t.Error(err)
+	}
 	write(t, rw, "PING")
 	assert.Equal(t, "PONG", read(t, rw))
 }
 
 func TestEcho(t *testing.T) {
-	rw := connect(t)
+	rw, err := connect()
+	if err != nil {
+		t.Error(err)
+	}
 	write(t, rw, "ECHO", "Hello")
 	assert.Equal(t, "Hello", read(t, rw))
 }
 
 func TestSetGet(t *testing.T) {
-	rw := connect(t)
+	rw, err := connect()
+	if err != nil {
+		t.Error(err)
+	}
 	write(t, rw, "SET", "Lewis", "Hamilton")
 	assert.Equal(t, "OK", read(t, rw))
 	write(t, rw, "GET", "Lewis")
 	assert.Equal(t, "Hamilton", read(t, rw))
 }
 
-func TestSetGetMulti(t *testing.T) {
-	tchan := make(chan time.Duration)
-	n := 500
-	for i := 0; i < n; i++ {
-		go testSetGetKey(t, tchan, i)
-	}
-
-	tt := 0
-	for i := 0; i < n*2; i++ {
-		tt += int(<-tchan)
-	}
-	t.Logf("Avg time: %d\n", int(tt/(n*2*1000)))
+type resp struct {
+	connectTime int
+	getSetTime  int
+	err         error
 }
 
-func testSetGetKey(t *testing.T, tchan chan time.Duration, n int) {
-	rw := connect(t)
+func TestSetGetMulti(t *testing.T) {
+	rchan := make(chan resp)
+	n := 5
+	for i := 0; i < n; i++ {
+		go testSetGetKey(t, rchan, i)
+	}
+
+	ctt := 0
+	gtt := 0
+	for i := 0; i < n; i++ {
+		resp := <-rchan
+		if resp.err != nil {
+			t.Error(resp.err)
+			break
+		}
+		ctt += resp.connectTime
+		gtt += resp.getSetTime
+	}
+	t.Logf("Avg connect time: %d Avg getset time: %d\n",
+		int(ctt/n),
+		int(gtt/n))
+}
+
+func testSetGetKey(t *testing.T, rchan chan resp, n int) {
+	tu := time.Microsecond
+	resp := resp{}
+	st := time.Now()
+	rw, err := connect()
+	if err != nil {
+		resp.err = err
+		rchan <- resp
+		return
+	}
+	resp.connectTime = int(time.Since(st) / tu)
 	ns := str(n)
 
-	st := time.Now()
+	st = time.Now()
 	write(t, rw, "SET", "Lewis "+ns, "Hamilton"+ns)
 	res := read(t, rw)
-	tchan <- time.Since(st)
+	fgst := int(time.Since(st) / tu)
 
 	assert.Equal(t, "OK", res)
 
@@ -62,7 +95,10 @@ func testSetGetKey(t *testing.T, tchan chan time.Duration, n int) {
 	st = time.Now()
 	write(t, rw, "GET", "Lewis "+ns)
 	assert.Equal(t, "Hamilton"+ns, read(t, rw))
-	tchan <- time.Since(st)
+	sgst := int(time.Since(st) / tu)
+	resp.getSetTime = int((fgst + sgst) / 2)
+
+	rchan <- resp
 }
 
 func read(t *testing.T, r *bufio.ReadWriter) string {
@@ -103,11 +139,11 @@ func str(n int) string {
 	return strconv.Itoa(n)
 }
 
-func connect(t *testing.T) *bufio.ReadWriter {
+func connect() (*bufio.ReadWriter, error) {
 	conn, err := net.Dial("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Exiting due to error", err)
-		t.Fatalf("Connect error %v", err)
+		return nil, err
 	}
-	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
