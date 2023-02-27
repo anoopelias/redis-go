@@ -49,8 +49,10 @@ type resp struct {
 
 func TestSetGetMulti(t *testing.T) {
 	rchan := make(chan resp)
-	n := 5
+
+	n := 500
 	for i := 0; i < n; i++ {
+		time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
 		go testSetGetKey(t, rchan, i)
 	}
 
