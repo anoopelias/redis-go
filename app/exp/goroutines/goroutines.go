@@ -37,8 +37,8 @@ func main() {
 func loop(chcmd chan command) {
 	dict := make(map[string]string)
 	for {
-		c := <-chcmd
-		c.resp <- execute(c, dict)
+		cmd := <-chcmd
+		cmd.resp <- execute(cmd, dict)
 	}
 }
 

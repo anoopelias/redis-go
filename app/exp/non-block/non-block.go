@@ -7,66 +7,36 @@ import (
 )
 
 func main() {
-	err := connect()
+
+	sfd, err := startServer()
 	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func connect() error {
-
-	dict := make(map[string]string)
-
-	sfd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
-	if err != nil {
-		return err
+		panic(err)
 	}
 	defer syscall.Close(sfd)
 
-	var sa syscall.SockaddrInet4
-	sa.Port = 6379
-	sa.Addr = [4]byte{0, 0, 0, 0}
-
-	err = syscall.Bind(sfd, &sa)
-	if err != nil {
-		return err
-	}
-
-	err = syscall.Listen(sfd, 50)
-	if err != nil {
-		return err
-	}
-
-	err = syscall.SetNonblock(sfd, true)
-	if err != nil {
-		return err
-	}
-
 	fmt.Println("Accepting connections")
+	err = loop(sfd)
+	if err != nil {
+		panic(err)
+	}
+}
 
+func loop(sfd int) error {
 	cfds := []int{}
+	dict := make(map[string]string)
 
 	for {
-		cfd, _, err := syscall.Accept(sfd)
-		isNew := true
+		// Handle new connections
+		cfd, isNew, err := accept(sfd)
 		if err != nil {
-			if shouldRetry(err) {
-				isNew = false
-			} else {
-				return err
-			}
+			return err
 		}
-
 		if isNew {
-			err = syscall.SetNonblock(cfd, true)
-			if err != nil {
-				return err
-			}
 			cfds = append(cfds, cfd)
 		}
 
-		// To remove disconnected cfd
 		ncfds := []int{}
+		// Check existing connections
 		for _, cfd := range cfds {
 			ctd, err := handle(cfd, dict)
 			if err != nil {
@@ -76,9 +46,55 @@ func connect() error {
 				ncfds = append(ncfds, cfd)
 			}
 		}
-
 		cfds = ncfds
 	}
+}
+
+func accept(sfd int) (int, bool, error) {
+	isNew := true
+	cfd, _, err := syscall.Accept(sfd)
+	if err != nil {
+		if shouldRetry(err) {
+			isNew = false
+		} else {
+			return -1, isNew, err
+		}
+	}
+
+	if isNew {
+		err = syscall.SetNonblock(cfd, true)
+		if err != nil {
+			return -1, isNew, err
+		}
+	}
+	return cfd, isNew, nil
+}
+
+func startServer() (int, error) {
+	sfd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
+	if err != nil {
+		return 0, err
+	}
+
+	var sa syscall.SockaddrInet4
+	sa.Port = 6379
+	sa.Addr = [4]byte{0, 0, 0, 0}
+
+	err = syscall.Bind(sfd, &sa)
+	if err != nil {
+		return 0, err
+	}
+
+	err = syscall.Listen(sfd, 50)
+	if err != nil {
+		return 0, err
+	}
+
+	err = syscall.SetNonblock(sfd, true)
+	if err != nil {
+		return 0, err
+	}
+	return sfd, nil
 }
 
 func handle(cfd int, dict map[string]string) (bool, error) {

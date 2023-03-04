@@ -7,56 +7,39 @@ import (
 )
 
 func main() {
-	err := connect()
+
+	sfd, err := startServer()
 	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func connect() error {
-
-	dict := make(map[string]string)
-
-	sfd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
-	if err != nil {
-		return err
+		panic(err)
 	}
 	defer syscall.Close(sfd)
 
-	var sa syscall.SockaddrInet4
-	sa.Port = 6379
-	sa.Addr = [4]byte{0, 0, 0, 0}
-
-	err = syscall.Bind(sfd, &sa)
-	if err != nil {
-		return err
-	}
-
-	err = syscall.Listen(sfd, 50)
-	if err != nil {
-		return err
-	}
-
-	err = syscall.SetNonblock(sfd, true)
-	if err != nil {
-		return err
-	}
-
+	// Create kqueue
 	kq, err := syscall.Kqueue()
 	if err != nil {
-		return err
+		panic(err)
 	}
 
+	// Add sfd to kqueue
 	err = addEvent(kq, sfd)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	fmt.Println("Accepting connections")
 
+	err = loop(kq, sfd)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func loop(kq int, sfd int) error {
+	dict := make(map[string]string)
 	for {
 		events := make([]syscall.Kevent_t, 100)
 		n, err := syscall.Kevent(kq, nil, events, nil)
+		// There is a possible EINTR for which we need to retry.
 		if err != nil && !shouldRetry(err) {
 			return err
 		}
@@ -76,6 +59,33 @@ func connect() error {
 			}
 		}
 	}
+}
+
+func startServer() (int, error) {
+	sfd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
+	if err != nil {
+		return 0, err
+	}
+
+	var sa syscall.SockaddrInet4
+	sa.Port = 6379
+	sa.Addr = [4]byte{0, 0, 0, 0}
+
+	err = syscall.Bind(sfd, &sa)
+	if err != nil {
+		return 0, err
+	}
+
+	err = syscall.Listen(sfd, 50)
+	if err != nil {
+		return 0, err
+	}
+
+	err = syscall.SetNonblock(sfd, true)
+	if err != nil {
+		return 0, err
+	}
+	return sfd, nil
 }
 
 func handle(cfd int, dict map[string]string) error {
@@ -160,7 +170,8 @@ func accept(ev *syscall.Kevent_t, kq int, sfd int) error {
 
 func addEvent(kq int, fd int) error {
 	ev := syscall.Kevent_t{
-		Ident:  uint64(fd),
+		Ident: uint64(fd),
+		// Filter read operations
 		Filter: syscall.EVFILT_READ,
 		Flags:  syscall.EV_ADD,
 	}
