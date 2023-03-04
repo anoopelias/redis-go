@@ -88,12 +88,13 @@ func handle(cfd int, dict map[string]string) error {
 	if n > 0 {
 		req := string(data[:n])
 		splits := strings.Split(req, "\r\n")
-		if splits[2] == "GET" {
+
+		if strings.EqualFold(splits[2], "GET") {
 			err = get(cfd, splits[4], dict)
 			if err != nil {
 				return err
 			}
-		} else if splits[2] == "SET" {
+		} else if strings.EqualFold(splits[2], "SET") {
 			err = set(cfd, splits[4], splits[6], dict)
 			if err != nil {
 				return err
