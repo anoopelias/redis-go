@@ -163,7 +163,7 @@ func addEvent(kq int, fd int) error {
 	ev := syscall.Kevent_t{
 		Ident:  uint64(fd),
 		Filter: syscall.EVFILT_READ,
-		Flags:  syscall.EV_ADD | syscall.EV_ENABLE | syscall.EV_CLEAR,
+		Flags:  syscall.EV_ADD,
 	}
 
 	_, err := syscall.Kevent(kq, []syscall.Kevent_t{ev}, nil, nil)
