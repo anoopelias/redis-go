@@ -57,9 +57,8 @@ func connect() error {
 	for {
 		events := make([]syscall.Kevent_t, 100)
 		n, err := syscall.Kevent(kq, nil, events, nil)
-		if err != nil {
-			fmt.Printf("Error waiting for kqueue events: %v\n", err)
-			continue
+		if err != nil && !shouldRetry(err) {
+			return err
 		}
 
 		for i := 0; i < n; i++ {
@@ -172,4 +171,12 @@ func addEvent(kq int, fd int) error {
 	}
 
 	return nil
+}
+
+func shouldRetry(err error) bool {
+	errno, ok := err.(syscall.Errno)
+	if !ok {
+		return false
+	}
+	return errno.Temporary()
 }
