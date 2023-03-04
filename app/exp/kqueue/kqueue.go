@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"syscall"
 )
 
@@ -13,6 +14,8 @@ func main() {
 }
 
 func connect() error {
+
+	dict := make(map[string]string)
 
 	sfd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
 	if err != nil {
@@ -29,7 +32,7 @@ func connect() error {
 		return err
 	}
 
-	err = syscall.Listen(sfd, 3)
+	err = syscall.Listen(sfd, 50)
 	if err != nil {
 		return err
 	}
@@ -52,7 +55,7 @@ func connect() error {
 	fmt.Println("Accepting connections")
 
 	for {
-		events := make([]syscall.Kevent_t, 10)
+		events := make([]syscall.Kevent_t, 100)
 		n, err := syscall.Kevent(kq, nil, events, nil)
 		if err != nil {
 			fmt.Printf("Error waiting for kqueue events: %v\n", err)
@@ -67,7 +70,7 @@ func connect() error {
 				}
 			} else {
 				cfd := int(events[i].Ident)
-				err = read(cfd)
+				err = handle(cfd, dict)
 				if err != nil {
 					return err
 				}
@@ -76,17 +79,64 @@ func connect() error {
 	}
 }
 
-func read(cfd int) error {
+func handle(cfd int, dict map[string]string) error {
 	data := make([]byte, 2000)
 	n, err := syscall.Read(cfd, data)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("n : %d\n", n)
 	if n > 0 {
-		fmt.Print(string(data[:n]))
+		req := string(data[:n])
+		splits := strings.Split(req, "\r\n")
+		if splits[2] == "GET" {
+			err = get(cfd, splits[4], dict)
+			if err != nil {
+				return err
+			}
+		} else if splits[2] == "SET" {
+			err = set(cfd, splits[4], splits[6], dict)
+			if err != nil {
+				return err
+			}
+		} else {
+			// We just say OK for unknown commands
+			_, err := syscall.Write(cfd, []byte("+OK\r\n"))
+			if err != nil {
+				return err
+			}
+		}
+	} else if n == 0 {
+		err = syscall.Close(cfd)
+		if err != nil {
+			return err
+		}
 	}
-	// if n == 0, we should remove from kq?
+	return nil
+}
+
+func get(cfd int, key string, dict map[string]string) error {
+	if v, ok := dict[key]; ok {
+		_, err := syscall.Write(cfd, []byte("+"+v+"\r\n"))
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := syscall.Write(cfd, []byte("$-1\r\n"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func set(cfd int, key string, value string, dict map[string]string) error {
+	dict[key] = value
+	_, err := syscall.Write(cfd, []byte("+OK\r\n"))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

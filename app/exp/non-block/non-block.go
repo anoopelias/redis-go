@@ -65,6 +65,8 @@ func connect() error {
 				fmt.Printf("n : %d\n", n)
 				if n > 0 {
 					fmt.Print(string(data[:n]))
+					n, err := syscall.Write(cfd, []byte("-ERR unknown command 'helloworld'\r\n"))
+					fmt.Printf("Wrote %d bytes %v\n", n, err)
 				} else {
 					fmt.Println("Closing connection")
 					return nil
